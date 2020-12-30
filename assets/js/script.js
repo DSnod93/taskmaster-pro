@@ -1,30 +1,5 @@
 var tasks = {};
 
-var auditTask = function(taskEl) {
-  // to ensure element is getting to  the function
-  console.log(taskEl);
-
-  // get date from task element
-  var date = $(taskEl)
-  .find("span")
-  .text()
-  .trim();
-
-  // convert to moment object at 5:00pm
-  var time = moment(date, "L")
-  .set("hour", 17);
-  
-  // remove any old classes from element
-  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
-
-  // apply new class if task is near/over due date
-  if(moment() .isAfter(time)) {
-    $(taskEl).addClass("list-group-item-danger");
-  }
-  else if (Math.abs(moment().diff(time, "days")) <= 2) {
-    $(taskEl).addClass("list-group-item-warning");
-  }
-};
 
 var createTask = function(taskText, taskDate, taskList) {
   // create elements that make up a task item
@@ -74,6 +49,36 @@ var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+
+
+var auditTask = function(taskEl) {
+  // to ensure element is getting to  the function
+  console.log(taskEl);
+
+  // get date from task element
+  var date = $(taskEl)
+  .find("span")
+  .text()
+  .trim();
+
+  // convert to moment object at 5:00pm
+  var time = moment(date, "L")
+  .set("hour", 17);
+  
+  // remove any old classes from element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  // apply new class if task is near/over due date
+  if(moment() .isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  }
+  else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
+};
+
+
+
 // enable draggable/sortable feature on list-group elements
 $(".card .list-group").sortable({
   // enable dragging across lists
@@ -82,15 +87,27 @@ $(".card .list-group").sortable({
   tolerance: "pointer",
   helper: "clone",
   activate: function(event, ui) {
+    $(this)
+    .addClass("dropover")
+    $(".bottom-trash")
+    .addClass("bottom-trash-drag")
     console.log(ui);
   },
   deactivate: function(event, ui) {
+    $(this)
+    .removeClass("dropover")
+    $(".bottom-trash")
+    .removeClass("bottom-trash-drag")
     console.log(ui);
   },
   over: function(event) {
+    $(event.target)
+    .addClass("dropover-active")
     console.log(event);
   },
   out: function(event) {
+    $(event.target)
+    .removeClass("dropover-active")
     console.log(event);
   },
   update: function() {
@@ -137,11 +154,19 @@ $("#trash").droppable({
 
   },
   over: function(event, ui) {
+    $("bottom-trash").addClass("bottom-trash-active")
     console.log(ui);
   },
   out: function(event, ui) {
+    $("bottom-trash").addClass("bottom-trash-active")
     console.log(ui);
   }
+});
+
+
+
+$("#modalDueDate").datepicker({
+  minDate: 1
 });
 
 
@@ -158,7 +183,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -290,9 +315,11 @@ $("#remove-tasks").on("click", function() {
 loadTasks();
 
 
+setInterval(function () {
+  $(".card .list-group-item").each(function(index, el) {
+    auditTask(el);
+  });
+}, (1000 * 60) * 30);
 
-$("#modalDueDate").datepicker({
-  minDate: 1
-});
 
 
